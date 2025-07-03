@@ -1,8 +1,10 @@
 import pandas as pd
 import os
+import yaml
 
 # Load the stations CSV file
 CSV = pd.read_csv('stations-2023-09.csv')
+VISITED_FILE = 'visited.yaml'
 
 # Set the default menu selection
 MENU_SELECT = 0
@@ -12,6 +14,33 @@ REPEATER = 0
 
 # Count the number of task re-runs
 RERUN = 0
+
+### VISITED STATION LIST COMMANDS
+
+# Ensure visited.yaml exists with base structure
+if not os.path.exists(VISITED_FILE):
+    with open(VISITED_FILE, 'w') as f:
+        yaml.dump({'visited': []}, f)
+
+# Load visited codes
+def load_visited():
+    with open(VISITED_FILE, 'r') as f:
+        data = yaml.safe_load(f)
+    return data['visited']
+
+# Save visited codes
+def save_visited(codes):
+    with open(VISITED_FILE, 'w') as f:
+        yaml.dump({'visited': codes}, f)
+
+def mark_visited():
+    codes = load_visited()
+    codes.append({'code': CURRENT_SUGGESTED})
+    save_visited(codes)
+    print(f"Station {CURRENT_SUGGESTED} marked as visited.")
+    input("Press Enter to continue.")
+    main_menu()
+
 
 ### HOUSEKEEPING COMMANDS
 
@@ -33,6 +62,7 @@ def main_menu():
     print(HEADER)
     print("=" * len(HEADER))
     print("1 - Show random station")
+    print("2 - Suggest a station")
     print("9 - Exit")
 
     main_input()
@@ -57,6 +87,20 @@ def repeat_input():
 
     repeat_runner()
 
+def suggest_repeat_input():
+    print(" ")
+    choice = int(input("1 - Run again, 2 - Back to menu, 3 - Mark visited: "))
+
+    if choice == 1:
+        suggest_station()
+    elif choice == 2:
+        main_menu()
+    elif choice == 3:
+        mark_visited()
+    else:
+        print("(!) No command found, try again.")
+        suggest_repeat_input()
+
 ### RUNNER RELAY BOX
 
 def script_runner():
@@ -65,6 +109,8 @@ def script_runner():
 
     if MENU_SELECT == 1:
         show_random()
+    if MENU_SELECT == 2:
+        suggest_station()
     if MENU_SELECT == 9:
         exit()
     else:
@@ -108,6 +154,30 @@ def show_random():
     print (row)
 
     repeat_input()
+
+def suggest_station():
+    visited_codes = [v['code'] for v in load_visited()]
+    csv_nl = CSV[CSV['country'] == 'NL']
+
+    while True:
+        station = csv_nl.sample(n=1).iloc[0]
+        if station['code'] not in visited_codes:
+            break
+
+    clear()
+    header = f"{'CODE':<6} {'NAME':<30} {'TYPE':<30} {'LOCATION'}"
+    separator = '-' * (6 + 1 + 30 + 1 + 30 + 1 + 25)
+    row = f"{station['code']:<6} {station['name_long']:<30} {station['type']:<30} ({station['geo_lat']}, {station['geo_lng']})"
+    print(header)
+    print(separator)
+    print(row)
+
+    # Store the current station globally for marking visited
+    global CURRENT_SUGGESTED
+    CURRENT_SUGGESTED = station['code']
+
+    suggest_repeat_input()
+
 
 # Start the whole thing
 main_menu()
