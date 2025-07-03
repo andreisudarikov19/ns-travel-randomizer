@@ -19,6 +19,7 @@ def clear():
     os.system('clear')
 
 def exit():
+    clear()
     quit()
 
 ### USER INTERFACE COMMANDS
@@ -41,6 +42,7 @@ def main_input():
     global MENU_SELECT
 
     # Display prompt
+    print(" ")
     MENU_SELECT = int(input("Enter command number: "))
 
     script_runner()
@@ -50,6 +52,7 @@ def repeat_input():
     global REPEATER
 
     # Display prompt
+    print(" ")
     REPEATER = int(input("1 - Run again, 2 - Back to menu: "))
 
     repeat_runner()
@@ -63,7 +66,6 @@ def script_runner():
     if MENU_SELECT == 1:
         show_random()
     if MENU_SELECT == 9:
-        clear()
         exit()
     else:
         print("(!) No command found, try again.")
