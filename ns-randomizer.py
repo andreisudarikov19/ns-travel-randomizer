@@ -39,7 +39,8 @@ def mark_visited():
     save_visited(codes)
     print(f"Station {CURRENT_SUGGESTED} marked as visited.")
     input("Press Enter to continue.")
-    main_menu()
+    clear()
+    suggest_station()
 
 
 ### HOUSEKEEPING COMMANDS
@@ -144,9 +145,15 @@ def show_random():
     station = CSV.sample(n=1).iloc[0]
 
     # Display station information
-    header = f"{'CODE':<6} {'NAME':<30} {'TYPE':<30} {'LOCATION'}"
-    separator = '-' * (6 + 1 + 30 + 1 + 30 + 1 + 25)
-    row = f"{station['code']:<6} {station['name_long']:<30} {station['type']:<30} ({station['geo_lat']}, {station['geo_lng']})"
+    code_width = max(len('CODE'), len(str(station['code']))) + 2
+    name_width = max(len('NAME'), len(station['name_long'])) + 2
+    type_width = max(len('TYPE'), len(station['type'])) + 2
+    location_str = f"({station['geo_lat']}, {station['geo_lng']})"
+    location_width = max(len('LOCATION'), len(location_str)) + 2
+
+    header = f"{'CODE':<{code_width}}{'NAME':<{name_width}}{'TYPE':<{type_width}}{'LOCATION':<{location_width}}"
+    separator = '-' * (code_width + name_width + type_width + location_width)
+    row = f"{station['code']:<{code_width}}{station['name_long']:<{name_width}}{station['type']:<{type_width}}{location_str:<{location_width}}"
 
     # Print the output into the console
     print (header)
@@ -165,9 +172,17 @@ def suggest_station():
             break
 
     clear()
-    header = f"{'CODE':<6} {'NAME':<30} {'TYPE':<30} {'LOCATION'}"
-    separator = '-' * (6 + 1 + 30 + 1 + 30 + 1 + 25)
-    row = f"{station['code']:<6} {station['name_long']:<30} {station['type']:<30} ({station['geo_lat']}, {station['geo_lng']})"
+
+    code_width = max(len('CODE'), len(str(station['code']))) + 2
+    name_width = max(len('NAME'), len(station['name_long'])) + 2
+    type_width = max(len('TYPE'), len(station['type'])) + 2
+    location_str = f"({station['geo_lat']}, {station['geo_lng']})"
+    location_width = max(len('LOCATION'), len(location_str)) + 2
+
+    header = f"{'CODE':<{code_width}}{'NAME':<{name_width}}{'TYPE':<{type_width}}{'LOCATION':<{location_width}}"
+    separator = '-' * (code_width + name_width + type_width + location_width)
+    row = f"{station['code']:<{code_width}}{station['name_long']:<{name_width}}{station['type']:<{type_width}}{location_str:<{location_width}}"
+
     print(header)
     print(separator)
     print(row)
