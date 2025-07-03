@@ -38,7 +38,7 @@ def mark_visited():
     codes.append({'code': CURRENT_SUGGESTED})
     save_visited(codes)
     print(f"Station {CURRENT_SUGGESTED} marked as visited.")
-    input("Press Enter to continue.")
+    input("Press Enter to suggest a new station...")
     clear()
     suggest_station()
 
@@ -64,6 +64,7 @@ def main_menu():
     print("=" * len(HEADER))
     print("1 - Show random station")
     print("2 - Suggest a station")
+    print("3 - List visited stations")
     print("9 - Exit")
 
     main_input()
@@ -112,6 +113,8 @@ def script_runner():
         show_random()
     if MENU_SELECT == 2:
         suggest_station()
+    if MENU_SELECT == 3:
+        list_visited()
     if MENU_SELECT == 9:
         exit()
     else:
@@ -149,7 +152,7 @@ def show_random():
     name_width = max(len('NAME'), len(station['name_long'])) + 2
     type_width = max(len('TYPE'), len(station['type'])) + 2
     location_str = f"({station['geo_lat']}, {station['geo_lng']})"
-    location_width = max(len('LOCATION'), len(location_str)) + 2
+    location_width = max(len('LOCATION'), len(location_str))
 
     header = f"{'CODE':<{code_width}}{'NAME':<{name_width}}{'TYPE':<{type_width}}{'LOCATION':<{location_width}}"
     separator = '-' * (code_width + name_width + type_width + location_width)
@@ -177,11 +180,16 @@ def suggest_station():
     name_width = max(len('NAME'), len(station['name_long'])) + 2
     type_width = max(len('TYPE'), len(station['type'])) + 2
     location_str = f"({station['geo_lat']}, {station['geo_lng']})"
-    location_width = max(len('LOCATION'), len(location_str)) + 2
+    location_width = max(len('LOCATION'), len(location_str))
+
+    # ANSI color codes
+    YELLOW = '\033[93m'
+    RESET = '\033[0m'   
 
     header = f"{'CODE':<{code_width}}{'NAME':<{name_width}}{'TYPE':<{type_width}}{'LOCATION':<{location_width}}"
     separator = '-' * (code_width + name_width + type_width + location_width)
-    row = f"{station['code']:<{code_width}}{station['name_long']:<{name_width}}{station['type']:<{type_width}}{location_str:<{location_width}}"
+    name_colored = f"{YELLOW}{station['name_long']}{RESET}"
+    row = f"{station['code']:<{code_width}}{name_colored:<{name_width + len(YELLOW) + len(RESET)}}{station['type']:<{type_width}}{location_str:<{location_width}}"
 
     print(header)
     print(separator)
@@ -193,6 +201,70 @@ def suggest_station():
 
     suggest_repeat_input()
 
+
+def list_visited():
+    clear()
+    
+    # Load visited codes
+    visited_entries = load_visited()
+    visited_codes = [v['code'] for v in visited_entries]
+    
+    if not visited_codes:
+        print("No stations marked as visited yet.")
+        input("\nPress Enter to return to main menu.")
+        main_menu()
+        return
+
+    # Filter CSV by visited codes
+    csv_nl = CSV[CSV['country'] == 'NL']
+    visited_stations = csv_nl[csv_nl['code'].isin(visited_codes)]
+
+    # Prepare location strings
+    visited_stations = visited_stations.copy()
+    visited_stations['location_str'] = visited_stations.apply(lambda x: f"({x['geo_lat']}, {x['geo_lng']})", axis=1)
+
+    code_width = max(len('CODE'), visited_stations['code'].str.len().max()) + 2
+    name_width = max(len('NAME'), visited_stations['name_long'].str.len().max()) + 2
+    type_width = max(len('TYPE'), visited_stations['type'].str.len().max()) + 2
+    location_width = max(len('LOCATION'), visited_stations['location_str'].str.len().max())
+
+    # ANSI color codes
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RESET = '\033[0m'
+
+    header = f"{'CODE':<{code_width}}{'NAME':<{name_width}}{'TYPE':<{type_width}}{'LOCATION':<{location_width}}"
+    separator = '-' * (code_width + name_width + type_width + location_width)
+
+    print(header)
+    print(separator)
+
+    for _, station in visited_stations.iterrows():
+        name_colored = f"{GREEN}{station['name_long']}{RESET}"
+        row = f"{station['code']:<{code_width}}{name_colored:<{name_width + len(GREEN) + len(RESET)}}{station['type']:<{type_width}}{station['location_str']:<{location_width}}"
+        print(row)
+
+    # Print summary stats
+    total_nl = csv_nl.shape[0]
+    visited_count = len(visited_codes)
+    to_go_count = total_nl - visited_count
+
+    print("\nSummary:")
+    print(f"- Stations visited: {GREEN}{visited_count}{RESET}")
+    print(f"- To go: {YELLOW}{to_go_count}{RESET}")
+
+    # Print progress bar
+    bar_length = 40
+    visited_ratio = visited_count / total_nl
+    visited_blocks = int(bar_length * visited_ratio)
+    to_go_blocks = bar_length - visited_blocks
+
+    progress_bar = f"{GREEN}{'█' * visited_blocks}{YELLOW}{'█' * to_go_blocks}{RESET}"
+
+    print(f"\nProgress: [{progress_bar}] {visited_ratio * 100:.2f}% visited")
+
+    input("\nPress Enter to return to menu.")
+    main_menu()
 
 # Start the whole thing
 main_menu()
