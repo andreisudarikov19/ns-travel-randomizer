@@ -65,6 +65,7 @@ def main_menu():
     print("1 - Show random station")
     print("2 - Suggest a station")
     print("3 - List visited stations")
+    print("4 - Find station by name or code")
     print("9 - Exit")
 
     main_input()
@@ -115,6 +116,8 @@ def script_runner():
         suggest_station()
     if MENU_SELECT == 3:
         list_visited()
+    if MENU_SELECT == 4:
+        find_station()
     if MENU_SELECT == 9:
         exit()
     else:
@@ -265,6 +268,54 @@ def list_visited():
 
     input("\nPress Enter to return to menu.")
     main_menu()
+
+def find_station():
+    clear()
+
+    # ANSI color codes
+    GREEN = '\033[92m'
+    RESET = '\033[0m'
+
+    csv_nl = CSV[CSV['country'] == 'NL']
+
+    query = input("Enter station name or code to search: ").strip()
+
+    # Search by code or exact name (case insensitive)
+    results = csv_nl[(csv_nl['code'].str.lower() == query.lower()) | (csv_nl['name_long'].str.lower() == query.lower())]
+
+    if results.empty:
+        print("No station found with that name or code.")
+        input("Press Enter to continue.")
+        main_menu()
+        return
+
+    # Take only the first matching station
+    station = results.iloc[0]
+
+    # Determine dynamic column widths
+    code_width = max(len('CODE'), len(station['code'])) + 2
+    name_width = max(len('NAME'), len(station['name_long'])) + 2
+    type_width = max(len('TYPE'), len(station['type'])) + 2
+    location_str = f"({station['geo_lat']}, {station['geo_lng']})"
+    location_width = max(len('LOCATION'), len(location_str)) + 2
+
+    # Prepare header
+    header = f"{'CODE':<{code_width}}{'NAME':<{name_width}}{'TYPE':<{type_width}}{'LOCATION':<{location_width}}"
+    separator = '-' * (code_width + name_width + type_width + location_width)
+
+    name_colored = f"{GREEN}{station['name_long']}{RESET}"
+    row = f"{station['code']:<{code_width}}{name_colored:<{name_width + len(GREEN) + len(RESET)}}{station['type']:<{type_width}}{location_str:<{location_width}}"
+
+    print(header)
+    print(separator)
+    print(row)
+
+    # Store the current station globally for marking visited
+    global CURRENT_SUGGESTED
+    CURRENT_SUGGESTED = station['code']
+
+    # Use suggest_repeat_input() for further actions
+    suggest_repeat_input()
 
 # Start the whole thing
 main_menu()
