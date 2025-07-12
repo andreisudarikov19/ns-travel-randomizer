@@ -15,3 +15,4 @@ python3 ns-randomizer.py
 Before starting the script. make sure to isntall the following dependencies in your venv:
 
 * `pandas`
+* `yaml`
