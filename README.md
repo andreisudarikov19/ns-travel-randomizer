@@ -12,7 +12,7 @@ python3 ns-randomizer.py
 
 ## Dependencies
 
-Before starting the script. make sure to isntall the following dependencies in your venv:
+Before starting the script, make sure to isntall the following dependencies in your venv:
 
 * `pandas`
 * `yaml`
